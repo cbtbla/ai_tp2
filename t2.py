@@ -2,6 +2,8 @@ import os
 import sys
 # for deep copy
 import copy
+# for sleep
+import time
 
 class GameEnum:
 	GAME_UNDECIDED		= -1
@@ -29,7 +31,6 @@ def GetBoardSymbolForSlot(board, idx):
 
 def drawBoard(board):
 	clear()
-	print ("\nTIC TAC TOE \n")
 	print('\n   |   |')
 	print(' ' + GetBoardSymbolForSlot(board, 0) + ' | ' + GetBoardSymbolForSlot(board, 1) + ' | ' + GetBoardSymbolForSlot(board, 2))
 	print('   |   |')
@@ -119,7 +120,8 @@ def DoMove(board, player, idx):
 
 def PlayGame():
 	# initial board - [0, 0, 0, 0, 0, 0, 0, 0, 0]
-	board = [GameEnum.BOARD_UNFILLED] * 9
+	# 9th position used for 'play done', used for states
+	board = [GameEnum.BOARD_UNFILLED] * 10
 
 	drawBoard(board)
 	
@@ -159,7 +161,7 @@ class AlphaBeta:
 		value = GameEnum.MIN_INT
 		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
 			minVal = AlphaBeta.MinValue(s, alfa, beta)
-			if minVal > value:
+			if minVal >= value:
 				value = minVal
 				playMove = s[9] # play move is stored on the position after the array
 
@@ -203,16 +205,16 @@ class AlphaBeta:
 			
 		return value
 
-def sucessors(board, player):
-	allBoards = []
-	for i in range(9):
-		if board[i] == GameEnum.BOARD_UNFILLED:
-			newBoard = copy.deepcopy(board)
-			newBoard[i] = player
-			newBoard.append(i); # store the play move after the regular board array, in the 9th position
-			allBoards.append(newBoard)
+def sucessors(state, player):
+	stateList = []
+	for idx in range(9):
+		if state[idx] == GameEnum.BOARD_UNFILLED:
+			newState = copy.deepcopy(state)
+			newState[idx] = player
+			newState[9] = idx; # store the play move after the regular board array, in the 9th position
+			stateList.append(newState)
 
-	return allBoards
+	return stateList
 
 def terminalTest(board):
 	return GetGameWinner(board) != -1
