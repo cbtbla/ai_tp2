@@ -49,6 +49,9 @@ def menu():
 #		first = int(raw_input("Escolha o primeiro a jogar"))
 #	return first-1
 
+
+
+
 # returns:
 # 0 if draw
 # 1/2 if winner 'A' or 'B', respectively
@@ -162,30 +165,58 @@ def pcMove(board):
 		except:
 			pass
 
-def AllCombinations(board, play):
+def sucessors(board, play):
 	allBoards = []
-	#for i in range(9):
-		
-	
+	for i in range(9):
+		if board[i]!= 'A' and board[i]!= 'B':
+			newBoard = copy.deepcopy(board)
+			newBoard[i] = play
+			allBoards.append(newBoard)
 	return allBoards
 
-def minmax(board, depth, maximizingPlayer):
-	node = AllCombinations(board)
-	node = []
-	if (depth == 0):
-		return depth
-	if maximizingPlayer:
-		bestValue = -float('inf')
-		#foreach child in node:
-		#	val = minmax(child, depth -1, False)
-		#	bestValue = max(bestValue, val)
-		return bestValue
+def terminalTest(board):
+	return GetGameWinner != -1
+
+def minmaxDecision(board,play):
+	value,state = maxValue(board)
+	return state
+
+
+def utility(board,player):
+	winner = GetGameWinner(board)
+	if winner == 0:
+		return 0
+	elif winner == player:
+		return 1
 	else:
-		bestValue = float('inf')
-		#foreach child in node:
-		#	val = minmax(child, depth -1, False)
-		#	bestValue = min(bestValue, val)
-		return bestValue
+		return -1
+	
+def maxValue(board):
+	
+	if terminalTest(board):
+		return utility(board,'A')
+		
+	maxstate = board
+	value = -float('inf')
+	for s in board:
+		minvalue = minValue(s)
+		if minvalue > value:
+			value = minvalue
+			maxstate = s
+	return (value,maxstate)
+
+def minValue(board):
+	if terminalTest(board):
+		return utility(board,'B')
+		
+	v = float('inf')
+	for s in board:
+		maxvalue = maxValue(s)
+		if maxvalue < value:
+			value = maxvalue
+			minstate = s
+	return (value,minstate)
+
 
 def main():
 	winner = Play()
