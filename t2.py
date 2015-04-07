@@ -49,16 +49,43 @@ def menu():
 #		first = int(raw_input("Escolha o primeiro a jogar"))
 #	return first-1
 
-def isWinner(board, player):
-	#Returns True if that player has won
-    return ((board[0] == player and board[1] == player and board[2] == player) or 	# top line
-    (board[3] == player and board[4] == player and board[5] == player) or 			# middle line
-    (board[6] == player and board[7] == player and board[8] == player) or 			# bottom line
-    (board[0] == player and board[3] == player and board[6] == player) or 			# left column
-    (board[1] == player and board[4] == player and board[7] == player) or 			# middle column
-    (board[2] == player and board[5] == player and board[8] == player) or 			# right column
-    (board[0] == player and board[4] == player and board[8] == player) or 			# diagonal \
-    (board[2] == player and board[4] == player and board[6] == player)) 			# diagonal /
+# returns:
+# 0 if draw
+# 1/2 if winner 'A' or 'B', respectively
+# -1 if none of the above (game in progress?)
+def GetGameWinner(board):
+
+    winner = 0; # draw by default
+    if board[0] == board[1] == board[2]: # top line
+        winner = board[0]
+        
+    if board[3] == board[4] == board[5]: # middle line
+        winner = board[3]
+
+    if board[6] == board[7] == board[8]: # bottom line
+        winner = board[6]
+
+    if board[0] == board[3] == board[6]: # left column
+        winner = board[0]
+
+    if board[1] == board[4] == board[7]: # middle column
+        winner = board[1]
+
+    if board[2] == board[5] == board[8]: # right column
+        winner = board[2]
+
+    if board[0] == board[4] == board[8]: # diagonal \
+        winner = board[0]
+
+    if board[2] == board[4] == board[6]: # diagonal /
+        winner = board[2]
+        
+    if winner == 0: # it's either a draw or a game in progress
+        for idx in range(0, 9):
+            if board[idx] != 'A' and board[idx] != 'B': # there's a free position, it's a game in progress
+                winner = -1 # set the match as in progress
+
+    return winner
 	
 def Moves(board, player, play, position):
 	if (position == '1'):
@@ -120,7 +147,7 @@ def Play():
 
 		board, play = Moves(board, player, play, position)
 
-		if (isWinner(board, player[(play-1)%2])): return player[(play-1)%2]
+		if (GetGameWinner(board) == player[(play-1)%2]): return player[(play-1)%2]
 
 		if (play == 9): return False
 
