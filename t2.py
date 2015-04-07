@@ -72,43 +72,42 @@ def menu():
 #		first = int(raw_input("Escolha o primeiro a jogar"))
 #	return first-1
 
-# returns GameEnum
-# 0 if draw
-# 1/2 if winner 'A' or 'B', respectively
-# -1 if none of the above (game in progress?)
-def GetGameWinner(board):
+def GetGameWinner(state):
+	linesToCheck = [
+		# horizontal
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		# vertical
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		# diagonals
+		[0, 4, 8],
+		[2, 4, 6]
+	]
 
-	winner = GameEnum.GAME_DRAW; # draw by default
-	if board[0] == board[1] == board[2] != GameEnum.BOARD_UNFILLED: # top line
-		winner = board[0]
-		
-	if board[3] == board[4] == board[5] != GameEnum.BOARD_UNFILLED: # middle line
-		winner = board[3]
+	for line in linesToCheck:
+		x = GameEnum.BOARD_UNFILLED
+		for idx in line:
+			if state[idx] == GameEnum.BOARD_UNFILLED:
+				x = GameEnum.BOARD_UNFILLED
+				break
 
-	if board[6] == board[7] == board[8] != GameEnum.BOARD_UNFILLED: # bottom line
-		winner = board[6]
+			if x != GameEnum.BOARD_UNFILLED and x != state[idx]: # did both players make a move on the line? ignore it if yes
+				x = GameEnum.BOARD_UNFILLED
+				break
 
-	if board[0] == board[3] == board[6] != GameEnum.BOARD_UNFILLED: # left column
-		winner = board[0]
+			x = state[idx]
 
-	if board[1] == board[4] == board[7] != GameEnum.BOARD_UNFILLED: # middle column
-		winner = board[1]
+		if x != GameEnum.BOARD_UNFILLED:
+			return x
 
-	if board[2] == board[5] == board[8] != GameEnum.BOARD_UNFILLED: # right column
-		winner = board[2]
-
-	if board[0] == board[4] == board[8] != GameEnum.BOARD_UNFILLED: # diagonal \
-		winner = board[0]
-
-	if board[2] == board[4] == board[6] != GameEnum.BOARD_UNFILLED: # diagonal /
-		winner = board[2]
-		
-	if winner == GameEnum.GAME_DRAW: # it's either a draw or a game in progress
-		for idx in range(0, 9):
-			if board[idx] != 'A' and board[idx] != 'B': # there's a free position, it's a game in progress
-				winner = GameEnum.GAME_UNDECIDED # set the match as in progress
-
-	return winner
+	for idx in range(0, 9):
+		if state[idx] == GameEnum.BOARD_UNFILLED:
+			return GameEnum.GAME_UNDECIDED
+			
+	return GameEnum.GAME_DRAW
 
 # does sanity checking on the board
 def DoMove(board, player, idx):
@@ -161,6 +160,10 @@ class AlphaBeta:
 		value = GameEnum.MIN_INT
 		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
 			minVal = AlphaBeta.MinValue(s, alfa, beta)
+			
+			# apply secondary utility 'heuristic', serves to distinguish between 'all options are shit' states
+			minVal += GetSideUtility(s)
+			
 			if minVal >= value:
 				value = minVal
 				playMove = s[9] # play move is stored on the position after the array
@@ -205,6 +208,40 @@ class AlphaBeta:
 			
 		return value
 
+def GetSideUtility(state):
+	utility = 0
+	linesToCheck = [
+		# horizontal
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		# vertical
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		# diagonals
+		[0, 4, 8],
+		[2, 4, 6]
+	]
+	
+	for line in linesToCheck:
+		x = GameEnum.BOARD_UNFILLED
+		for idx in line:
+			if state[idx] != GameEnum.BOARD_UNFILLED: # check if someone already made a move on the line
+				if x != GameEnum.BOARD_UNFILLED and x != state[idx]: # did both players make a move on the line? ignore it if yes
+					x = GameEnum.BOARD_UNFILLED
+					break
+
+				x = state[idx]
+
+		if x == GameEnum.PLAYER_HUMAN:
+			utility -= 1
+		elif x == GameEnum.PLAYER_COMPUTER:
+			utility += 1
+		# else it's a line for both players, so no utility change
+
+	return utility
+
 def sucessors(state, player):
 	stateList = []
 	for idx in range(9):
@@ -229,9 +266,9 @@ def utility(board):
 	if winner == GameEnum.GAME_DRAW:
 		return 0
 	elif winner == GameEnum.PLAYER_COMPUTER:
-		return 1
+		return 100
 	else:
-		return -1
+		return -100
 	
 def maxValue(board):
 	
