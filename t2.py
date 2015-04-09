@@ -1,25 +1,49 @@
 import os
 import sys
-import random
+# for deep copy
+import copy
+# for sleep
+import time
 
-clear = lambda: os.system(['clear','cls'][os.name == 'nt'])
+class GameEnum:
+	GAME_UNDECIDED		= -1
+	GAME_DRAW			= 0
+
+	BOARD_UNFILLED		= 0
+
+	PLAYER_HUMAN		= 1
+	PLAYER_COMPUTER		= 2
+
+	MAX_INT				= sys.maxint
+	MIN_INT				= -sys.maxint - 1
+
+#clear = lambda: os.system(['clear','cls'][os.name == 'nt'])
+
+def GetBoardSymbolForSlot(board, idx):
+	if board[idx] == GameEnum.BOARD_UNFILLED:
+		return str(idx + 1)
+	elif board[idx] == GameEnum.PLAYER_HUMAN:
+		return 'X'
+	elif board[idx] == GameEnum.PLAYER_COMPUTER:
+		return 'O'
+		
+	assert False
 
 def drawBoard(board):
-	clear()
-	print ("\nTIC TAC TOE \n")
+	#clear()
+	print('\nTic Tac Toe')
 	print('\n   |   |')
-	print(' ' + board[0] + ' | ' + board[1] + ' | ' + board[2])
+	print(' ' + GetBoardSymbolForSlot(board, 0) + ' | ' + GetBoardSymbolForSlot(board, 1) + ' | ' + GetBoardSymbolForSlot(board, 2))
 	print('   |   |')
 	print('-----------')
 	print('   |   |')
-	print(' ' + board[3] + ' | ' + board[4] + ' | ' + board[5])
+	print(' ' + GetBoardSymbolForSlot(board, 3) + ' | ' + GetBoardSymbolForSlot(board, 4) + ' | ' + GetBoardSymbolForSlot(board, 5))
 	print('   |   |')
 	print('-----------')
 	print('   |   |')
-	print(' ' + board[6] + ' | ' + board[7] + ' | ' + board[8])
+	print(' ' + GetBoardSymbolForSlot(board, 6) + ' | ' + GetBoardSymbolForSlot(board, 7) + ' | ' + GetBoardSymbolForSlot(board, 8))
 	print('   |   |\n')
 
-	
 def menu():
 	first = None
 	algorithm = None
@@ -31,140 +55,265 @@ def menu():
 
 #	
 #def computerAlgorithm(comp):
-#    alg = None
-#    print "Algoritmo"
-#    print "1. MiniMax"
-#    print "2. Alpha-Beta"
-#    while alg not in [1,2]:
-#        alg = int(raw_input("Escolha o algoritmo: "))
-#    return alg
+#	alg = None
+#	print "Algoritmo"
+#	print "1. MiniMax"
+#	print "2. Alpha-Beta"
+#	while alg not in [1,2]:
+#		alg = int(raw_input("Escolha o algoritmo: "))
+#	return alg
 
-# MAYBE TO REMOVE
-#def firstPlayer(playerA,playerB):
-#	first = None
-#	print "Primeiro a jogar:"
-#	print "1.",playA," (0) "
-#	print "2.",playB," (X) "
-#	while first not in [1,2]:
-#		first = int(raw_input("Escolha o primeiro a jogar"))
-#	return first-1
+def GetGameWinner(state):
+	linesToCheck = [
+		# horizontal
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		# vertical
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		# diagonals
+		[0, 4, 8],
+		[2, 4, 6]
+	]
 
-def isWinner(board, player):
-	#Returns True if that player has won
-    return ((board[0] == player and board[1] == player and board[2] == player) or 	# top line
-    (board[3] == player and board[4] == player and board[5] == player) or 			# middle line
-    (board[6] == player and board[7] == player and board[8] == player) or 			# bottom line
-    (board[0] == player and board[3] == player and board[6] == player) or 			# left column
-    (board[1] == player and board[4] == player and board[7] == player) or 			# middle column
-    (board[2] == player and board[5] == player and board[8] == player) or 			# right column
-    (board[0] == player and board[4] == player and board[8] == player) or 			# diagonal \
-    (board[2] == player and board[4] == player and board[6] == player)) 			# diagonal /
+	for line in linesToCheck:
+		x = GameEnum.BOARD_UNFILLED
+		for idx in line:
+			if state[idx] == GameEnum.BOARD_UNFILLED:
+				x = GameEnum.BOARD_UNFILLED
+				break
+
+			if x != GameEnum.BOARD_UNFILLED and x != state[idx]: # did both players make a move on the line? ignore it if yes
+				x = GameEnum.BOARD_UNFILLED
+				break
+
+			x = state[idx]
+
+		if x != GameEnum.BOARD_UNFILLED:
+			return x
+
+	for idx in range(0, 9):
+		if state[idx] == GameEnum.BOARD_UNFILLED:
+			return GameEnum.GAME_UNDECIDED
+			
+	return GameEnum.GAME_DRAW
+
+# does sanity checking on the board
+def DoMove(board, player, idx):
+
+	assert board[idx] == GameEnum.BOARD_UNFILLED
 	
-def Moves(board, player, play, position):
-	if (position == '1'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '2'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)			
-		play+=1
-	elif (position == '3'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '4'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '5'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '6'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '7'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '8'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	elif (position == '9'):
-		board[int(position) - 1] = player[play%2]
-		drawBoard(board)
-		play+=1
-	
-	return board, play
-
-def Play():
-	board = ['1', '2', '3', '4', '5', '6' , '7', '8', '9']
-
+	board[idx] = player
 	drawBoard(board)
 
-	play = 0
-	player = ['A', 'B']
+def PlayGame():
+	# initial board - [0, 0, 0, 0, 0, 0, 0, 0, 0]
+	# 9th position used for 'play done', used for states
+	board = [GameEnum.BOARD_UNFILLED] * 10
 
-	while (play != 9):
-		print ("Player ", player[play%2])
-		if (not play%2):
-			position = input("Choose a number: ")
-		else:
-			position = pcMove(board)
-			board[int(position) - 1] = player[play%2]
-			drawBoard(board)
-			play+=1
+	drawBoard(board)
+	
+	while True:
+		# person plays first
+		# board displays as [1, 2, ..., 9], which is not the way the array is stored, so we need to subtract 1
+		position = int(input("Choose a number: ")) - 1
+		DoMove(board, GameEnum.PLAYER_HUMAN, position)
 
-		board, play = Moves(board, player, play, position)
+		winner = GetGameWinner(board)
+		if winner != GameEnum.GAME_UNDECIDED:
+			return winner
 
-		if (isWinner(board, player[(play-1)%2])): return player[(play-1)%2]
+		# computer plays after
+		position = pcMove(board)
+		DoMove(board, GameEnum.PLAYER_COMPUTER, position)
 
-		if (play == 9): return False
+		winner = GetGameWinner(board)
+		if winner != GameEnum.GAME_UNDECIDED:
+			return winner
 
 def pcMove(board):
-	while (True):
-		number = random.sample(board,  1)[0]
-		
-		try:		
-			number = int(number)
-			if ((number > 0) or (number < 10)):
-				return number
-		except:
-			pass
-
-def AllCombinations(board, play):
-	allBoards = []
-	#for i in range(9):
-		
+	#return AlphaBeta.Search(board)
+	return MiniMax.Decision(board)
 	
-	return allBoards
+######################################
+class AlphaBeta:
+	@staticmethod
+	def Search(state):
+		value, playMove = AlphaBeta.MaxValue_Init(state, GameEnum.MIN_INT, GameEnum.MAX_INT)
+		return playMove
+		
+	@staticmethod
+	def MaxValue_Init(state, alfa, beta):
+		assert terminalTest(state) == False
+			
+		playMove = -1
+		value = GameEnum.MIN_INT
+		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
+			minVal = AlphaBeta.MinValue(s, alfa, beta)
+			
+			# apply secondary utility 'heuristic', serves to distinguish between 'all options are shit' states
+			minVal += GetSideUtility(s)
+			
+			if minVal >= value:
+				value = minVal
+				playMove = s[9] # play move is stored on the position after the array
 
-def minmax(board, depth, maximizingPlayer):
-	node = AllCombinations(board)
-	node = []
-	if (depth == 0):
-		return depth
-	if maximizingPlayer:
-		bestValue = -float('inf')
-		#foreach child in node:
-		#	val = minmax(child, depth -1, False)
-		#	bestValue = max(bestValue, val)
-		return bestValue
+			if value >= beta:
+				return (value, playMove)
+
+			alfa = max(alfa, value)
+			
+		assert playMove != -1
+		return (value, playMove)
+		
+	@staticmethod
+	def MaxValue(state, alfa, beta):
+		if terminalTest(state):
+			return utility(state)
+			
+		value = GameEnum.MIN_INT
+		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
+			value = max(value, AlphaBeta.MinValue(s, alfa, beta))
+
+			if value >= beta:
+				return value
+
+			alfa = max(alfa, value)
+			
+		return value
+
+	@staticmethod
+	def MinValue(state, alfa, beta):
+		if terminalTest(state):
+			return utility(state)
+			
+		value = GameEnum.MAX_INT
+		for s in sucessors(state, GameEnum.PLAYER_HUMAN):
+			value = min(value, AlphaBeta.MaxValue(s, alfa, beta))
+
+			if value <= alfa:
+				return value
+
+			beta = min(beta, value)
+			
+		return value
+
+def GetSideUtility(state):
+	utility = 0
+	linesToCheck = [
+		# horizontal
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		# vertical
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		# diagonals
+		[0, 4, 8],
+		[2, 4, 6]
+	]
+	
+	for line in linesToCheck:
+		x = GameEnum.BOARD_UNFILLED
+		for idx in line:
+			if state[idx] != GameEnum.BOARD_UNFILLED: # check if someone already made a move on the line
+				if x != GameEnum.BOARD_UNFILLED and x != state[idx]: # did both players make a move on the line? ignore it if yes
+					x = GameEnum.BOARD_UNFILLED
+					break
+
+				x = state[idx]
+
+		if x == GameEnum.PLAYER_HUMAN:
+			utility -= 1
+		elif x == GameEnum.PLAYER_COMPUTER:
+			utility += 1
+		# else it's a line for both players, so no utility change
+
+	return utility
+
+#######################################
+class MiniMax:
+	@staticmethod
+	def Decision(state):
+		value, playMove = MiniMax.maxValue_Init(state)
+		return playMove
+		
+	@staticmethod
+	def maxValue_Init(state):
+		assert terminalTest(state) == False
+		
+		playMove = -1
+		value = GameEnum.MIN_INT
+		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
+			minVal = MiniMax.minValue(s)
+			
+			minVal += GetSideUtility(s)
+			
+			if minVal >= value:
+				value = minVal
+				playMove = s[9]
+		
+		assert playMove != -1
+		return(value,playMove)
+		
+		
+	@staticmethod
+	def maxValue(state):
+		if terminalTest(state):
+			return utility(state)
+			
+		value = GameEnum.MIN_INT
+		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
+			value = max(value, MiniMax.minValue(s))
+		return value
+		
+	@staticmethod
+	def minValue(state):
+		if terminalTest(state):
+			return utility(state)
+		
+		value = GameEnum.MAX_INT
+		for s in sucessors(state, GameEnum.PLAYER_HUMAN):
+			value = min(value, MiniMax.maxValue(s))
+		return value
+
+def sucessors(state, player):
+	stateList = []
+	for idx in range(9):
+		if state[idx] == GameEnum.BOARD_UNFILLED:
+			newState = copy.deepcopy(state)
+			newState[idx] = player
+			newState[9] = idx; # store the play move after the regular board array, in the 9th position
+			stateList.append(newState)
+
+	return stateList
+
+def terminalTest(board):
+	return GetGameWinner(board) != -1
+
+def utility(board):
+	winner = GetGameWinner(board)
+	if winner == GameEnum.GAME_DRAW:
+		return 0
+	elif winner == GameEnum.PLAYER_COMPUTER:
+		return 100
 	else:
-		bestValue = float('inf')
-		#foreach child in node:
-		#	val = minmax(child, depth -1, False)
-		#	bestValue = min(bestValue, val)
-		return bestValue
+		return -100
 
 def main():
-	winner = Play()
+	winner = PlayGame()
+	
+	assert winner != GameEnum.GAME_UNDECIDED
 
-	if (winner == False): print ("Draw")
-	else: print ("The winner is player:", winner)
+	if winner == GameEnum.GAME_DRAW:
+		print "Draw"
+	elif winner == GameEnum.PLAYER_HUMAN:
+		print "Player won"
+	elif winner == GameEnum.PLAYER_COMPUTER:
+		print "Computer won"
 
 if __name__ == "__main__":
 	main()
