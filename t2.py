@@ -14,10 +14,65 @@ class GameEnum:
 	PLAYER_HUMAN		= 1
 	PLAYER_COMPUTER		= 2
 
-	MAX_INT				= sys.maxint
-	MIN_INT				= -sys.maxint - 1
+	MAX_INT				= sys.maxunicode
+	MIN_INT				= -sys.maxunicode - 1
+	
+def utility(board):
+	winner = GetGameWinner(board)
+	if winner == GameEnum.GAME_DRAW:
+		return 0
+	elif winner == GameEnum.PLAYER_COMPUTER:
+		return 100
+	else:
+		return -100
+		
+def terminalTest(board):
+	return GetGameWinner(board) != -1
 
-#clear = lambda: os.system(['clear','cls'][os.name == 'nt'])
+def sucessors(state, player):
+	stateList = []
+	for idx in range(9):
+		if state[idx] == GameEnum.BOARD_UNFILLED:
+			newState = copy.deepcopy(state)
+			newState[idx] = player
+			newState[9] = idx; # store the play move after the regular board array, in the 9th position
+			stateList.append(newState)
+
+	return stateList
+
+def GetSideUtility(state):
+	utility = 0
+	linesToCheck = [
+		# horizontal
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		# vertical
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		# diagonals
+		[0, 4, 8],
+		[2, 4, 6]
+	]
+	
+	for line in linesToCheck:
+		x = GameEnum.BOARD_UNFILLED
+		for idx in line:
+			if state[idx] != GameEnum.BOARD_UNFILLED: # check if someone already made a move on the line
+				if x != GameEnum.BOARD_UNFILLED and x != state[idx]: # did both players make a move on the line? ignore it if yes
+					x = GameEnum.BOARD_UNFILLED
+					break
+
+				x = state[idx]
+
+		if x == GameEnum.PLAYER_HUMAN:
+			utility -= 1
+		elif x == GameEnum.PLAYER_COMPUTER:
+			utility += 1
+		# else it's a line for both players, so no utility change
+
+	return utility
 
 def GetBoardSymbolForSlot(board, idx):
 	if board[idx] == GameEnum.BOARD_UNFILLED:
@@ -29,8 +84,31 @@ def GetBoardSymbolForSlot(board, idx):
 		
 	assert False
 
+def pcMove(board,algorithm):
+	if algorithm == 1:
+		return MiniMax.Decision(board)
+	if algorithm == 2:
+		return AlphaBeta.Search(board)	
+	
+# does sanity checking on the board
+def DoMove(board, player, idx):
+
+	assert board[idx] == GameEnum.BOARD_UNFILLED
+	
+	board[idx] = player
+	drawBoard(board)
+
+# allows the choice of algorithm for computer
+def computerAlgorithm():
+	algorithm = None
+	print ('Computer algorithm')
+	print ('1. MiniMax')
+	print ('2. Alpha-Beta')
+	while algorithm not in [1,2]:
+		algorithm = int(input('Choose algorithm: '))
+	return algorithm
+
 def drawBoard(board):
-	#clear()
 	print('\nTic Tac Toe')
 	print('\n   |   |')
 	print(' ' + GetBoardSymbolForSlot(board, 0) + ' | ' + GetBoardSymbolForSlot(board, 1) + ' | ' + GetBoardSymbolForSlot(board, 2))
@@ -43,25 +121,6 @@ def drawBoard(board):
 	print('   |   |')
 	print(' ' + GetBoardSymbolForSlot(board, 6) + ' | ' + GetBoardSymbolForSlot(board, 7) + ' | ' + GetBoardSymbolForSlot(board, 8))
 	print('   |   |\n')
-
-def menu():
-	first = None
-	algorithm = None
-	flag = True
-	print "------------"
-	print "Jogo do Galo"
-	print "------------"
-
-
-#	
-#def computerAlgorithm(comp):
-#	alg = None
-#	print "Algoritmo"
-#	print "1. MiniMax"
-#	print "2. Alpha-Beta"
-#	while alg not in [1,2]:
-#		alg = int(raw_input("Escolha o algoritmo: "))
-#	return alg
 
 def GetGameWinner(state):
 	linesToCheck = [
@@ -99,26 +158,18 @@ def GetGameWinner(state):
 			return GameEnum.GAME_UNDECIDED
 			
 	return GameEnum.GAME_DRAW
-
-# does sanity checking on the board
-def DoMove(board, player, idx):
-
-	assert board[idx] == GameEnum.BOARD_UNFILLED
 	
-	board[idx] = player
-	drawBoard(board)
-
 def PlayGame():
 	# initial board - [0, 0, 0, 0, 0, 0, 0, 0, 0]
 	# 9th position used for 'play done', used for states
 	board = [GameEnum.BOARD_UNFILLED] * 10
-
+	algorithm = computerAlgorithm()
 	drawBoard(board)
 	
 	while True:
 		# person plays first
 		# board displays as [1, 2, ..., 9], which is not the way the array is stored, so we need to subtract 1
-		position = int(input("Choose a number: ")) - 1
+		position = int(input('Choose a number: ')) - 1
 		DoMove(board, GameEnum.PLAYER_HUMAN, position)
 
 		winner = GetGameWinner(board)
@@ -126,18 +177,15 @@ def PlayGame():
 			return winner
 
 		# computer plays after
-		position = pcMove(board)
+		position = pcMove(board,algorithm)
 		DoMove(board, GameEnum.PLAYER_COMPUTER, position)
 
 		winner = GetGameWinner(board)
 		if winner != GameEnum.GAME_UNDECIDED:
 			return winner
 
-def pcMove(board):
-	#return AlphaBeta.Search(board)
-	return MiniMax.Decision(board)
-	
 ######################################
+# AlfaBeta algorithm
 class AlphaBeta:
 	@staticmethod
 	def Search(state):
@@ -200,41 +248,8 @@ class AlphaBeta:
 			
 		return value
 
-def GetSideUtility(state):
-	utility = 0
-	linesToCheck = [
-		# horizontal
-		[0, 1, 2],
-		[3, 4, 5],
-		[6, 7, 8],
-		# vertical
-		[0, 3, 6],
-		[1, 4, 7],
-		[2, 5, 8],
-		# diagonals
-		[0, 4, 8],
-		[2, 4, 6]
-	]
-	
-	for line in linesToCheck:
-		x = GameEnum.BOARD_UNFILLED
-		for idx in line:
-			if state[idx] != GameEnum.BOARD_UNFILLED: # check if someone already made a move on the line
-				if x != GameEnum.BOARD_UNFILLED and x != state[idx]: # did both players make a move on the line? ignore it if yes
-					x = GameEnum.BOARD_UNFILLED
-					break
-
-				x = state[idx]
-
-		if x == GameEnum.PLAYER_HUMAN:
-			utility -= 1
-		elif x == GameEnum.PLAYER_COMPUTER:
-			utility += 1
-		# else it's a line for both players, so no utility change
-
-	return utility
-
 #######################################
+# MiniMax algorithm
 class MiniMax:
 	@staticmethod
 	def Decision(state):
@@ -280,40 +295,19 @@ class MiniMax:
 			value = min(value, MiniMax.maxValue(s))
 		return value
 
-def sucessors(state, player):
-	stateList = []
-	for idx in range(9):
-		if state[idx] == GameEnum.BOARD_UNFILLED:
-			newState = copy.deepcopy(state)
-			newState[idx] = player
-			newState[9] = idx; # store the play move after the regular board array, in the 9th position
-			stateList.append(newState)
-
-	return stateList
-
-def terminalTest(board):
-	return GetGameWinner(board) != -1
-
-def utility(board):
-	winner = GetGameWinner(board)
-	if winner == GameEnum.GAME_DRAW:
-		return 0
-	elif winner == GameEnum.PLAYER_COMPUTER:
-		return 100
-	else:
-		return -100
-
 def main():
 	winner = PlayGame()
 	
 	assert winner != GameEnum.GAME_UNDECIDED
 
 	if winner == GameEnum.GAME_DRAW:
-		print "Draw"
+		print ('Draw')
 	elif winner == GameEnum.PLAYER_HUMAN:
-		print "Player won"
+		print ('Player won')
 	elif winner == GameEnum.PLAYER_COMPUTER:
-		print "Computer won"
+		print ('Computer won')
 
 if __name__ == "__main__":
 	main()
+
+
