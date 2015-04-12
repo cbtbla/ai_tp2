@@ -2,7 +2,7 @@ import os
 import sys
 # for deep copy
 import copy
-# for sleep
+# for sleep and time measuring
 import time
 
 class GameEnum:
@@ -84,7 +84,7 @@ def GetBoardSymbolForSlot(board, idx):
 		
 	assert False
 
-def pcMove(board,algorithm):
+def pcMove(board, algorithm):
 	if algorithm == 1:
 		return MiniMax.Decision(board)
 	if algorithm == 2:
@@ -177,8 +177,12 @@ def PlayGame():
 			return winner
 
 		# computer plays after
-		position = pcMove(board,algorithm)
+		startTime = time.clock()
+		position = pcMove(board, algorithm)
 		DoMove(board, GameEnum.PLAYER_COMPUTER, position)
+		endTime = time.clock()
+		# print out elapsed time for performance measurement
+		print ("Calc time: %s seconds" % (endTime - startTime))
 
 		winner = GetGameWinner(board)
 		if winner != GameEnum.GAME_UNDECIDED:
