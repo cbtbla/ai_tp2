@@ -17,6 +17,11 @@ class GameEnum:
 	MAX_INT				= sys.maxunicode
 	MIN_INT				= -sys.maxunicode - 1
 	
+
+# global variables are evil
+# says everyone ever, until they need one
+expandedStates = 0 # performance measurement, total states expanded
+
 def utility(board):
 	winner = GetGameWinner(board)
 	if winner == GameEnum.GAME_DRAW:
@@ -178,11 +183,16 @@ def PlayGame():
 
 		# computer plays after
 		startTime = time.clock()
+		
+		global expandedStates
+		expandedStates = 0
+		
 		position = pcMove(board, algorithm)
 		DoMove(board, GameEnum.PLAYER_COMPUTER, position)
 		endTime = time.clock()
 		# print out elapsed time for performance measurement
 		print ("Calc time: %s seconds" % (endTime - startTime))
+		print ("Expanded states: %s" % expandedStates)
 
 		winner = GetGameWinner(board)
 		if winner != GameEnum.GAME_UNDECIDED:
@@ -199,7 +209,10 @@ class AlphaBeta:
 	@staticmethod
 	def MaxValue_Init(state, alfa, beta):
 		assert terminalTest(state) == False
-			
+		
+		global expandedStates
+		expandedStates += 1
+		
 		playMove = -1
 		value = GameEnum.MIN_INT
 		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
@@ -222,6 +235,9 @@ class AlphaBeta:
 		
 	@staticmethod
 	def MaxValue(state, alfa, beta):
+		global expandedStates
+		expandedStates += 1
+		
 		if terminalTest(state):
 			return utility(state)
 			
@@ -238,6 +254,9 @@ class AlphaBeta:
 
 	@staticmethod
 	def MinValue(state, alfa, beta):
+		global expandedStates
+		expandedStates += 1
+		
 		if terminalTest(state):
 			return utility(state)
 			
@@ -264,6 +283,9 @@ class MiniMax:
 	def maxValue_Init(state):
 		assert terminalTest(state) == False
 		
+		global expandedStates
+		expandedStates += 1
+		
 		playMove = -1
 		value = GameEnum.MIN_INT
 		for s in sucessors(state, GameEnum.PLAYER_COMPUTER):
@@ -281,6 +303,9 @@ class MiniMax:
 		
 	@staticmethod
 	def maxValue(state):
+		global expandedStates
+		expandedStates += 1
+		
 		if terminalTest(state):
 			return utility(state)
 			
@@ -291,6 +316,9 @@ class MiniMax:
 		
 	@staticmethod
 	def minValue(state):
+		global expandedStates
+		expandedStates += 1
+		
 		if terminalTest(state):
 			return utility(state)
 		
