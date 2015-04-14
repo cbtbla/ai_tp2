@@ -163,7 +163,32 @@ def GetGameWinner(state):
 			return GameEnum.GAME_UNDECIDED
 			
 	return GameEnum.GAME_DRAW
+
+# asks the player for a move
+def DoPlayerMove(board):
+	# board displays as [1, 2, ..., 9], which is not the way the array is stored, so we need to subtract 1
+	position = int(input('Choose a number: ')) - 1
+	DoMove(board, GameEnum.PLAYER_HUMAN, position)
+
+	winner = GetGameWinner(board)
+	return winner;
+
+def DoAIMove(board, algorithm):
+	startTime = time.clock()
 	
+	global expandedStates
+	expandedStates = 0
+	
+	position = pcMove(board, algorithm)
+	DoMove(board, GameEnum.PLAYER_COMPUTER, position)
+	endTime = time.clock()
+	# print out elapsed time for performance measurement
+	print ("Calc time: %s seconds" % (endTime - startTime))
+	print ("Expanded states: %s" % expandedStates)
+
+	winner = GetGameWinner(board)
+	return winner
+
 def PlayGame():
 	# initial board - [0, 0, 0, 0, 0, 0, 0, 0, 0]
 	# 9th position used for 'play done', used for states
@@ -171,30 +196,18 @@ def PlayGame():
 	algorithm = computerAlgorithm()
 	drawBoard(board)
 	
+	# ask if the player wants to play first
+	s = raw_input('Would you like the AI to play first? (Yes/No): ')
+	if (s == "Yes" or s == "yes"):
+		print ("This might take a moment")
+		DoAIMove(board, algorithm)
+	
 	while True:
-		# person plays first
-		# board displays as [1, 2, ..., 9], which is not the way the array is stored, so we need to subtract 1
-		position = int(input('Choose a number: ')) - 1
-		DoMove(board, GameEnum.PLAYER_HUMAN, position)
-
-		winner = GetGameWinner(board)
+		winner = DoPlayerMove(board)
 		if winner != GameEnum.GAME_UNDECIDED:
 			return winner
 
-		# computer plays after
-		startTime = time.clock()
-		
-		global expandedStates
-		expandedStates = 0
-		
-		position = pcMove(board, algorithm)
-		DoMove(board, GameEnum.PLAYER_COMPUTER, position)
-		endTime = time.clock()
-		# print out elapsed time for performance measurement
-		print ("Calc time: %s seconds" % (endTime - startTime))
-		print ("Expanded states: %s" % expandedStates)
-
-		winner = GetGameWinner(board)
+		winner = DoAIMove(board, algorithm)
 		if winner != GameEnum.GAME_UNDECIDED:
 			return winner
 
