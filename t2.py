@@ -17,7 +17,6 @@ class GameEnum:
 	MAX_INT				= sys.maxunicode
 	MIN_INT				= -sys.maxunicode - 1
 	
-
 # global variables are evil
 # says everyone ever, until they need one
 expandedStates = 0 # performance measurement, total states expanded
@@ -196,9 +195,9 @@ def PlayGame():
 	algorithm = computerAlgorithm()
 	drawBoard(board)
 	
-	# ask if the player wants to play first
-	s = raw_input('Would you like the AI to play first? (Yes/No): ')
-	if (s == "Yes" or s == "yes"):
+	# allows the choice of who plays first
+	s = int(input('Who goes first?\nType 1 for Player or 2 for Computer: '))
+	if (s == 2):
 		print ("This might take a moment")
 		DoAIMove(board, algorithm)
 	
